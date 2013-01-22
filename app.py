@@ -26,13 +26,15 @@ class Main(RequestHandler):
   def post(self, rid = None):
 
     image = self.get_argument('image', None)
+    langc = self.get_argument('langc', None)
     if isempty(image):
       print 'post: warning: empty image'
       raise HTTPError(500)
 
     open('client.png','wb').write(base64.b64decode(image))
 
-    os.system('tesseract client.png o')
+    os.system('tesseract -l %s client.png o' % langc)
+
     self.write({'data': file('o.txt').read()})
 
 routes = [

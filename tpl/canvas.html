@@ -75,16 +75,31 @@
           init();
         }
       }
+      function lang2code(name) {
+	dic = {
+	  'english': 'eng',
+	  'chinese': 'chi_sim',
+        }
+	return dic[name];
+      }
       function post() {
         $.ajax({
           type: "POST",
           url: "",
-          data: {'image':canvas.toDataURL().replace('data:image/png;base64,','')},
+	  data: {
+		  'image': canvas.toDataURL().replace('data:image/png;base64,',''),
+	  	  'langc': lang2code($('#lang')[0].value)
+	  },
           dataType: "image/png",
           success: function (response) {
             res = JSON.parse(response);
-            console.log(res.data);
-            $('#res').html(res.data ? res.data : 'Error');
+	    if (!res) alert("Empty response!!")
+	    if (res.data.replace('\n', '') == "")
+	      res.data = "Error"
+	    else
+              res.data = res.data.replace('\n','<br>');
+	    console.log(res.data);
+            $('#res').html(res.data);
           }
         });
       }
@@ -93,6 +108,10 @@
       #canvas {
         border: 1px solid black;
         cursor: pointer;
+      }
+      #res {
+        background-color: #000;
+        color: #0f0;
       }
     </style>
   </head>
@@ -103,6 +122,11 @@
     <a id="erase" href="javascript:erase()">erase</a>
     <a id="done" href="javascript:done()">done</a>
     <a id="post" href="javascript:post()">post</a>
+    <select id="lang">
+      <option>english</option>
+      <option>chinese</option>
+    </select>
+    <br>
     Scanned: <font id="res"></font>
   </body>
 </html>
