@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <title>HelloOCR</title>
+    <meta charset="utf-8">
+    <script src="/media/jquery.min.js"></script>
+    <script>
+      var canvas;
+      var gco;
+      var context;
+      var paintcolor = "black";
+      var background = "white";
+      function init() {
+        canvas = document.getElementById('canvas');
+        context = canvas.getContext('2d');
+        gco = context.globalCompositeOperation;
+        context.globalCompositeOperation = "destination-over";
+        context.fillStyle = background;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.globalCompositeOperation = gco;
+        canvas.onmousedown = draw_start;
+        canvas.onmouseup = draw_stop;
+      }
+      function draw_start(e) {
+        x = e.pageX;
+        y = e.pageY;
+        draw(x-15, y-15, 5, 5);
+        canvas.onmousemove = getmxy;
+        canvas.onmousedown = getmxy;
+      }
+      function draw_stop() {
+        canvas.onmousemove = null;
+        canvas.onmousedown = draw_start;
+      }
+      function getmxy(e) {
+        x = e.pageX;
+        y = e.pageY;
+        draw(x-15, y-15, 5, 5);
+      }
+      function draw(a,b,c,d,color) {
+        if (!color)
+          color = paintcolor;
+        context.fillStyle = color;
+        context.fillRect(a, b, c, d);
+      }
+      function erase() {
+        erase_link = document.getElementById("erase");
+        if (paintcolor == "black") {
+          //context.globalCompositeOperation = "destination-out";
+          paintcolor = "white";
+          erase_link.innerHTML = "paint";
+        }
+        else {
+          paintcolor = "black";
+          erase_link.innerHTML = "erase";
+          context.globalCompositeOperation = "source-over";
+        }
+      }
+      function clear() {
+        context.globalCompositeOperation = "destination-out";
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.globalCompositeOperation = "source-over";
+        context.fillStyle = "white";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      function done() {
+	done_link = document.getElementById("done");
+        if (canvas.onmousedown) {
+          canvas.onmousedown = null;
+          canvas.onmouseup = null;
+          canvas.onmousemove = null;
+          done_link.innerHTML = 'draw';
+        } else {
+          done_link.innerHTML = 'done';
+          init();
+        }
+      }
+      function post() {
+        $.ajax({
+          type: "POST",
+          url: "",
+          data: {'image':canvas.toDataURL().replace('data:image/png;base64,','')},
+          dataType: "image/png",
+          success: function (response) {
+            res = JSON.parse(response);
+            console.log(res.data);
+            $('#res').html(res.data ? res.data : 'Error');
+          }
+        });
+      }
+    </script>
+    <style>
+      #canvas {
+        border: 1px solid black;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+    <canvas id="canvas" width=350 height=250>
+    </canvas><br>
+    <a href="javascript:clear()">clear</a>
+    <a id="erase" href="javascript:erase()">erase</a>
+    <a id="done" href="javascript:done()">done</a>
+    <a id="post" href="javascript:post()">post</a>
+    Scanned: <font id="res"></font>
+  </body>
+</html>
